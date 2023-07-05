@@ -24,5 +24,5 @@ MQTT_PASSWORD=
 MQTT_CLIENT_ID=
 ```
 ```shell
-$ python -m comfoconnect-mqtt-bridge
+$ python -m comfobridge
 ```

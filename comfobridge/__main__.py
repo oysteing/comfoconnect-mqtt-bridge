@@ -2,8 +2,8 @@ import asyncio
 import datetime
 import os
 
-from mqtt import MQTT
-from ventilation import Ventilation
+from comfobridge.mqtt import Mqtt
+from comfobridge.ventilation import Ventilation
 
 KEEPALIVE_TIMEOUT = datetime.timedelta(seconds=60)
 
@@ -24,7 +24,7 @@ class Config:
 class Engine:
     def __init__(self, config: Config):
         self.config: Config = config
-        self.mqtt = MQTT(config.mqtt_topic, config.mqtt_host, config.mqtt_port, config.mqtt_client_id, config.mqtt_user,
+        self.mqtt = Mqtt(config.mqtt_topic, config.mqtt_host, config.mqtt_port, config.mqtt_client_id, config.mqtt_user,
                          config.mqtt_password)
         self.ventilation = Ventilation(config.comfoconnect_host, config.comfoconnect_uuid,
                                        config.comfoconnect_local_uuid, self.mqtt.publish)

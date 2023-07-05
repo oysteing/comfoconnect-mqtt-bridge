@@ -7,7 +7,7 @@ def to_mqtt_format(value):
     return str(value).lower() if isinstance(value, bool) else value
 
 
-class MQTT:
+class Mqtt:
     def __init__(self, topic, host, port, client_id, username, password):
         self.topic = topic
         self.client = aiomqtt.Client(hostname=host, port=port, client_id=client_id, username=username,
