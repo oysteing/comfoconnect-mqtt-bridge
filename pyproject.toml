@@ -16,6 +16,10 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+dependencies = [
+    "aiocomfoconnect",
+    "aiomqtt"
+]
 
 [project.urls]
 "Homepage" = "https://github.com/oysteing/comfoconnect-mqtt-bridge"
