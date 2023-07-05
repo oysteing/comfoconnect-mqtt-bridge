@@ -6,6 +6,9 @@ and MQTT. You need a ComfoConnect LAN C device to interface with the unit.
 It is built upon [aiocomfoconnect](https://github.com/michaelarnauts/aiocomfoconnect) and is compatible with Python 3.8 and higher.
 
 ## Installation
+```shell
+$ pip install git+https://github.com/oysteing/comfoconnect-mqtt-bridge
+```
 
 ## Usage
 Supported environment variables with defaults:
@@ -21,5 +24,5 @@ MQTT_PASSWORD=
 MQTT_CLIENT_ID=
 ```
 ```shell
-$ python main.py
+$ python -m comfoconnect-mqtt-bridge
 ```
