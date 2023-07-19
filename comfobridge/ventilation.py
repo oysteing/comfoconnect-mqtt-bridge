@@ -14,6 +14,10 @@ class Ventilation:
         for key in aiocomfoconnect.sensors.SENSORS:
             await self.comfoconnect.register_sensor(aiocomfoconnect.sensors.SENSORS[key])
 
+    async def register_sensors(self, sensors):
+        for sensor in sensors:
+            await self.comfoconnect.register_sensor(aiocomfoconnect.sensors.SENSORS[sensor])
+
     async def keepalive(self):
         await self.comfoconnect.cmd_keepalive()
 

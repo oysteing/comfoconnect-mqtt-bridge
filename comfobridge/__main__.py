@@ -19,6 +19,7 @@ class Config:
         self.mqtt_user = os.getenv("MQTT_USER", "")
         self.mqtt_password = os.getenv("MQTT_PASSWORD", "")
         self.mqtt_client_id = os.getenv("MQTT_CLIENT_ID", "")
+        self.sensors = os.getenv("COMFOCONNECT_SENSORS")
 
 
 class Engine:
@@ -32,7 +33,10 @@ class Engine:
     async def start(self):
         await self.mqtt.connect()
         await self.ventilation.connect()
-        await self.ventilation.register_all_sensors()
+        if self.config.sensors is None:
+            await self.ventilation.register_all_sensors()
+        else:
+            await self.ventilation.register_sensors([int(sensor) for sensor in self.config.sensors.split(",")])
 
     async def run(self):
         while True:
