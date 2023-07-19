@@ -1,7 +1,17 @@
-FROM python
+FROM python:slim as builder
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
-RUN pip install --no-cache-dir git+https://github.com/oysteing/comfoconnect-mqtt-bridge
+COPY requirements.txt .
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
+
+FROM python:slim
+
+WORKDIR /app
+
+COPY --from=builder /app/wheels /wheels
+COPY --from=builder /app/requirements.txt .
+
+RUN pip install --no-cache /wheels/*
 
 CMD [ "python", "-m", "comfobridge" ]
