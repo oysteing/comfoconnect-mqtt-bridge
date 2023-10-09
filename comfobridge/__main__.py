@@ -3,6 +3,7 @@ import datetime
 import os
 
 from comfobridge.mqtt import Mqtt
+from comfobridge.reporting import Reporting
 from comfobridge.ventilation import Ventilation
 
 KEEPALIVE_TIMEOUT = datetime.timedelta(seconds=60)
@@ -20,6 +21,9 @@ class Config:
         self.mqtt_password = os.getenv("MQTT_PASSWORD", "")
         self.mqtt_client_id = os.getenv("MQTT_CLIENT_ID", "")
         self.sensors = os.getenv("COMFOCONNECT_SENSORS")
+        self.min_reporting_interval = os.getenv("COMFOBRIDGE_MIN_REPORTING_INTERVAL", 60)
+        self.max_reporting_interval = os.getenv("COMFOBRIDGE_MAX_REPORTING_INTERVAL", 3600)
+        self.min_reporting_change = os.getenv("COMFOBRIDGE_MIN_REPORTING_CHANGE", 2)
 
 
 class Engine:
@@ -27,8 +31,9 @@ class Engine:
         self.config: Config = config
         self.mqtt = Mqtt(config.mqtt_topic, config.mqtt_host, config.mqtt_port, config.mqtt_client_id, config.mqtt_user,
                          config.mqtt_password)
+        reporting = Reporting(config.min_reporting_interval, config.max_reporting_interval, config.min_reporting_change)
         self.ventilation = Ventilation(config.comfoconnect_host, config.comfoconnect_uuid,
-                                       config.comfoconnect_local_uuid, self.mqtt.publish)
+                                       config.comfoconnect_local_uuid, self.mqtt.publish, reporting)
 
     async def start(self):
         await self.mqtt.connect()

@@ -1,13 +1,18 @@
+from datetime import datetime
+
 import aiocomfoconnect.sensors
 from aiocomfoconnect import ComfoConnect
 
+from comfobridge.measurement import Measurement
+from comfobridge.reporting import Reporting
+
 
 class Ventilation:
-    def __init__(self, comfoconnect_host, uuid, local_uuid, sensor_callback):
-        self.comfoconnect = ComfoConnect(comfoconnect_host, uuid, sensor_callback=self.filter_unchanged)
+    def __init__(self, comfoconnect_host, uuid, local_uuid, sensor_callback, reporting: Reporting):
+        self.comfoconnect = ComfoConnect(comfoconnect_host, uuid, sensor_callback=self.filter)
         self.local_uuid = local_uuid
         self.sensor_callback_fn = sensor_callback
-        self.last_value = {}
+        self.reporting = reporting
 
     async def connect(self):
         await self.comfoconnect.connect(self.local_uuid)
@@ -26,9 +31,6 @@ class Ventilation:
     async def disconnect(self):
         await self.comfoconnect.disconnect()
 
-    def filter_unchanged(self, sensor, value):
-        last_value = self.last_value.get(sensor.name)
-
-        if type(last_value) != type(value) or abs((last_value - value) / last_value) >= 0.02:
-            self.last_value[sensor.name] = value
+    def filter(self, sensor, value):
+        if self.reporting.should_report(Measurement(timestamp=datetime.now(), sensor=sensor, value=value)):
             self.sensor_callback_fn(sensor, value)
