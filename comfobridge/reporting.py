@@ -1,5 +1,3 @@
-from numbers import Number
-
 from aiocomfoconnect.sensors import UNIT_CELCIUS
 
 from comfobridge.measurement import Measurement
