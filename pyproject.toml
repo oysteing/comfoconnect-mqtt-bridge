@@ -24,3 +24,6 @@ dependencies = [
 [project.urls]
 "Homepage" = "https://github.com/oysteing/comfoconnect-mqtt-bridge"
 "Bug Tracker" = "https://github.com/oysteing/comfoconnect-mqtt-bridge/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["comfobridge"]
