@@ -1,2 +1,2 @@
-aiomqtt~=1.2.1
+aiomqtt~=2.0.0
 aiocomfoconnect~=0.1.9

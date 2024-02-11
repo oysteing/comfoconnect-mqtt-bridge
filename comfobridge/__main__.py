@@ -37,30 +37,30 @@ class Engine:
         self.ventilation = Ventilation(config.comfoconnect_host, config.comfoconnect_uuid,
                                        config.comfoconnect_local_uuid, self.mqtt.publish, reporting)
 
-    async def start(self):
-        await self.mqtt.connect()
+    async def __aenter__(self):
+        await self.mqtt.__aenter__()
         await self.ventilation.connect()
         if self.config.sensors is None:
             await self.ventilation.register_all_sensors()
         else:
             await self.ventilation.register_sensors([int(sensor) for sensor in self.config.sensors.split(",")])
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.mqtt.__aexit__(exc_type, exc_val, exc_tb)
+        await self.ventilation.disconnect()
 
     async def run(self):
         while True:
             await asyncio.sleep(KEEPALIVE_TIMEOUT.seconds)
             await self.ventilation.keepalive()
 
-    async def stop(self):
-        await self.ventilation.disconnect()
-
 
 async def main():
     config = Config()
     logging.basicConfig(level=config.log_level)
-    engine = Engine(config)
-    await engine.start()
-    await engine.run()
-    await engine.stop()
+    async with Engine(config) as engine:
+        await engine.run()
 
 
 if __name__ == '__main__':
