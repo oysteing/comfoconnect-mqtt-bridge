@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import logging
 import os
 
 from comfobridge.mqtt import Mqtt
@@ -24,6 +25,7 @@ class Config:
         self.min_reporting_interval = os.getenv("COMFOBRIDGE_MIN_REPORTING_INTERVAL", 60)
         self.max_reporting_interval = os.getenv("COMFOBRIDGE_MAX_REPORTING_INTERVAL", 3600)
         self.min_reporting_change = os.getenv("COMFOBRIDGE_MIN_REPORTING_CHANGE", 2)
+        self.log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 
 
 class Engine:
@@ -53,7 +55,9 @@ class Engine:
 
 
 async def main():
-    engine = Engine(Config())
+    config = Config()
+    logging.basicConfig(level=config.log_level)
+    engine = Engine(config)
     await engine.start()
     await engine.run()
     await engine.stop()

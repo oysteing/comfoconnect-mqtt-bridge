@@ -26,6 +26,7 @@ MQTT_TOPIC=comfoconnect
 MQTT_USER=
 MQTT_PASSWORD=
 MQTT_CLIENT_ID=
+LOG_LEVEL=info
 ```
 ```shell
 $ python -m comfobridge
@@ -53,4 +54,5 @@ services:
       MQTT_CLIENT_ID: comfoconnect
       MQTT_USER: comfoconnect
       MQTT_PASSWORD: mypassword
+      LOG_LEVEL: DEBUG
 ```
