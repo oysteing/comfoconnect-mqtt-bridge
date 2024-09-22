@@ -11,16 +11,20 @@ def to_mqtt_format(value):
 
 
 class Mqtt:
-    def __init__(self, topic, host, port, client_id, username, password):
-        self.topic = topic
+    def __init__(self, sensor_topic, host, port, client_id, username, password):
+        self.sensor_topic = sensor_topic
         logger.info("Connecting to MQTT broker (host=%s, port=%d, client_id=%s, username=%s)", host, port, client_id,
                     username)
         self.client = aiomqtt.Client(hostname=host, port=port, identifier=client_id, username=username,
                                      password=password)
 
-    def publish(self, sensor, value):
+    def sensor_publish(self, sensor, value):
         logger.debug("Publishing %s = %s to MQTT broker", sensor.name, value)
-        asyncio.create_task(self.client.publish(self.topic + "/" + sensor.name.replace(" ", ""), to_mqtt_format(value)))
+        asyncio.create_task(self.client.publish(self.sensor_topic + "/" + sensor.name.replace(" ", ""), to_mqtt_format(value)))
+
+    def publish(self, topic, value):
+        logger.debug("Publishing %s = %s to MQTT broker", topic, value)
+        asyncio.create_task(self.client.publish(topic, value))
 
     async def __aenter__(self):
         await self.client.__aenter__()
