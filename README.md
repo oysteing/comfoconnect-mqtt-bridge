@@ -3,15 +3,19 @@
 `comfoconnect-mqtt-bridge` is a bridge for communicating between a Zehnder Comfoair Q350/450/600 ventilation system
 and MQTT. You need a ComfoConnect LAN C device to interface with the unit.
 
-It is built upon [aiocomfoconnect](https://github.com/michaelarnauts/aiocomfoconnect) and is compatible with Python 3.8 and higher.
+It is built upon [aiocomfoconnect](https://github.com/michaelarnauts/aiocomfoconnect) and is compatible with Python 3.8
+and higher.
 
 ## Installation
+
 ```shell
 $ pip install git+https://github.com/oysteing/comfoconnect-mqtt-bridge
 ```
 
 ## Usage
+
 Supported environment variables with defaults:
+
 ```
 COMFOCONNECT_HOST=
 COMFOCONNECT_BRIDGE_UUID=
@@ -29,16 +33,21 @@ MQTT_PASSWORD=
 MQTT_CLIENT_ID=
 LOG_LEVEL=info
 ```
+
 ```shell
 $ python -m comfobridge
 ```
 
 ### Docker
+
 Build a Docker container from the Dockerfile (pre-built image currently not published):
+
 ```
 docker build . -t comfoconnect-mqtt-bridge
 ```
+
 Example docker-compose:
+
 ```
 services:
   comfobridge:
@@ -57,3 +66,42 @@ services:
       MQTT_PASSWORD: mypassword
       LOG_LEVEL: DEBUG
 ```
+
+## Supported topics
+
+### Sensor data
+
+Readings from configured sensors will be published on the endpoint defined by MQTT_SENSOR_TOPIC, postfixed by the sensor
+name. Example: `comfoconnect/sensor/ExtractAirTemperature 22.5`
+
+### Ventilation control
+
+For each function, the current value can be requested by publishing to the `/get` topic, payload is not required. The
+current value will then be written out to the function topic. Changing the control value is done by posting the new
+value to the `/put` topic.
+
+Example with `MQTT_CONTROL_TOPIC=comfoconnect/control`:
+
+```
+comfoconnect/control/mode/get (null)
+comfoconnect/control/mode auto
+comfoconnect/control/mode/set manual
+comfoconnect/control/mode/get (null)
+comfoconnect/control/mode manual
+```
+
+#### Available functions
+
+The following functions and values (in parenthesis) are supported:
+
+* `mode`: Set the ventilation mode (auto / manual)
+* `speed`: Set the ventilation speed (away / low / medium / high)
+* `bypass`: Set the bypass mode (auto / on / off)
+* `balancemode`: Set the ventilation balance mode (balance / supply only / exhaust only)
+* `boost`: Activate boost mode 1h (true / false)
+* `away`: Activate away mode 1h (true / false)
+* `comfocoolmode`: Set the comfocool mode (auto / off)
+* `temperatureprofile`: Set the temperature profile (warm / normal / cool)
+* `temperaturepassive`: Configure sensor based ventilation mode - temperature passive (auto / on / off)
+* `humiditycomfort`: Configure sensor based ventilation mode - humidity comfort (auto / on / off)
+* `humidityprotection`: Configure sensor based ventilation mode - humidity protection (auto / on / off)
