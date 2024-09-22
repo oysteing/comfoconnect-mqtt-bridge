@@ -4,7 +4,6 @@ import logging
 import os
 from asyncio import create_task
 
-from aiomqtt import MqttError
 from attr.converters import to_bool
 
 from comfobridge.mqtt import Mqtt
@@ -29,9 +28,9 @@ class Config:
         self.mqtt_password = os.getenv("MQTT_PASSWORD", "")
         self.mqtt_client_id = os.getenv("MQTT_CLIENT_ID", "")
         self.sensors = os.getenv("COMFOCONNECT_SENSORS")
-        self.min_reporting_interval = os.getenv("COMFOBRIDGE_MIN_REPORTING_INTERVAL", 60)
-        self.max_reporting_interval = os.getenv("COMFOBRIDGE_MAX_REPORTING_INTERVAL", 3600)
-        self.min_reporting_change = os.getenv("COMFOBRIDGE_MIN_REPORTING_CHANGE", 2)
+        self.min_reporting_interval = int(os.getenv("COMFOBRIDGE_MIN_REPORTING_INTERVAL", 60))
+        self.max_reporting_interval = int(os.getenv("COMFOBRIDGE_MAX_REPORTING_INTERVAL", 3600))
+        self.min_reporting_change = float(os.getenv("COMFOBRIDGE_MIN_REPORTING_CHANGE", 2))
         self.log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 
 
