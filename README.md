@@ -78,7 +78,7 @@ name. Example: `comfoconnect/sensor/ExtractAirTemperature 22.5`
 
 For each function, the current value can be requested by publishing to the `/get` topic, payload is not required. The
 current value will then be written out to the function topic. Changing the control value is done by posting the new
-value to the `/put` topic.
+value to the `/set` topic.
 
 Example with `MQTT_CONTROL_TOPIC=comfoconnect/control`:
 
@@ -105,3 +105,21 @@ The following functions and values (in parenthesis) are supported:
 * `temperaturepassive`: Configure sensor based ventilation mode - temperature passive (auto / on / off)
 * `humiditycomfort`: Configure sensor based ventilation mode - humidity comfort (auto / on / off)
 * `humidityprotection`: Configure sensor based ventilation mode - humidity protection (auto / on / off)
+
+As alternive to just set a raw state, it is possible to send a JSON-payload to the set topic.
+This provides the possibility to set a configurable timeout for the functions
+`bypass`, `balancemode`, `boost`, `away`, `comfocoolmode`, `temperatureprofile`
+The payload has the following key and values (in paranthesis):
+* `state`: Mandatory - Set the desired value of the used function (any value mentioned above for the corresponding function)
+* `timeout`: Optional - set the desired value for the timeout, default is 1 (any (integer) number)
+* `duration`: Optional - same as timeout
+* `unit`: Optional - set the desired unit for the timeout-value, default is hour ((minute / min / m) / (hour / h) / (day / d)))
+
+Example payload:
+```
+{
+	'State': 'True',
+	'Timout': 1,
+	'Unit': 'day'
+}
+```
