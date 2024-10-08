@@ -98,28 +98,27 @@ The following functions and values (in parenthesis) are supported:
 * `speed`: Set the ventilation speed (away / low / medium / high)
 * `bypass`: Set the bypass mode (auto / on / off)
 * `balancemode`: Set the ventilation balance mode (balance / supply only / exhaust only)
-* `boost`: Activate boost mode 1h (true / false)
-* `away`: Activate away mode 1h (true / false)
+* `boost`: Activate boost mode (true / false)
+* `away`: Activate away mode (true / false)
 * `comfocoolmode`: Set the comfocool mode (auto / off)
 * `temperatureprofile`: Set the temperature profile (warm / normal / cool)
 * `temperaturepassive`: Configure sensor based ventilation mode - temperature passive (auto / on / off)
 * `humiditycomfort`: Configure sensor based ventilation mode - humidity comfort (auto / on / off)
 * `humidityprotection`: Configure sensor based ventilation mode - humidity protection (auto / on / off)
 
-As alternive to just set a raw state, it is possible to send a JSON-payload to the set topic.
+As alternative to just set a raw state, it is possible to send a JSON-payload to the set topic.
 This provides the possibility to set a configurable timeout for the functions
-`bypass`, `balancemode`, `boost`, `away`, `comfocoolmode`, `temperatureprofile`
+`bypass`, `balancemode`, `boost`, `away`, `comfocoolmode`, and `temperatureprofile`.
 The payload has the following key and values (in paranthesis):
 * `state`: Mandatory - Set the desired value of the used function (any value mentioned above for the corresponding function)
-* `timeout`: Optional - set the desired value for the timeout, default is 1 (any (integer) number)
-* `duration`: Optional - same as timeout
-* `unit`: Optional - set the desired unit for the timeout-value, default is hour ((minute / min / m) / (hour / h) / (day / d)))
+* `timeout`: Optional - set the desired value for the timeout, default is indefinite (any (integer) number)
+* `unit`: Optional - set the desired unit for the timeout-value, default is hour ((minutes / minute / min / m) / (hours / hour / h) / (days / day / d)))
 
 Example payload:
 ```
 {
-	'State': 'True',
-	'Timout': 1,
-	'Unit': 'day'
+	"state": true,
+	"timeout": 1,
+	"unit": "day"
 }
 ```

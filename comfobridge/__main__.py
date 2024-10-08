@@ -4,8 +4,7 @@ import logging
 import os
 import json
 from asyncio import create_task
-
-from attr.converters import to_bool
+from enum import Enum
 
 from comfobridge.mqtt import Mqtt
 from comfobridge.reporting import Reporting
@@ -76,8 +75,8 @@ class Engine:
                     raise TopicNotSupportedError(function)
             except TopicNotSupportedError:
                 logger.error("Topic %s is not supported", message.topic)
-            except ValueError:
-                logger.error("Invalid payload '%s' for topic '%s'", payload, message.topic)
+            except (KeyError, ValueError):
+                logger.exception("Invalid payload '%s' for topic '%s'", payload, message.topic)
 
     async def get_value(self, function):
         match function:
@@ -107,98 +106,37 @@ class Engine:
                 raise TopicNotSupportedError(function)
 
     async def set_value(self, function, payload):
+        state = payload
+        timeout = None
+        unit = None
 
-        # Some functions offer explicit setting of timeouts, so check if payload contains one, otherwise set 1h as default
-        # JSON payload can be extended by a unit for the timeout. Valid values are (default is h):
-        # minute, min, m
-        # hour, h
-        # day, d
-        stateToSet = ''
-        timeoutInHours = 1.0        # timeout[h]
-        unit = 'h'
-        isJsonPayload = True
-        stateToSet = payload
-
-        if payload != 'true' and payload != 'false':
-            try:
-                jsonPayload = json.loads(payload)
-            except ValueError:
-                isJsonPayload = False
-        else:
-            isJsonPayload = False
-
-        if isJsonPayload:
-
-            # ensure case-insensitivity
-            jsonPayloadTmp = jsonPayload.copy()
-
-            for key in jsonPayload:
-                value = jsonPayloadTmp[key]
-                if type(value) is str:
-                    if key != key.lower():
-                        jsonPayloadTmp[key.lower()] = value
-                        jsonPayloadTmp.pop(key)
-                if type(value) is str:
-                    jsonPayloadTmp[key.lower()] = jsonPayloadTmp[key.lower()].lower()
-
-            jsonPayload = jsonPayloadTmp.copy()
-
-            if 'state' in jsonPayload:
-                stateToSet = jsonPayload['state']
-            else:
-                logger.error(f'Payload: {jsonPayload} does not contain a state which is mandatory.')
-
-            if 'duration' in jsonPayload:
-                value = jsonPayload['duration']
-                try:
-                    timeoutInHours = float(value)
-                except ValueError:
-                    logger.error(f'Duration-Value: {value} is not castable to int.')
-            elif 'timeout' in jsonPayload:
-                value = jsonPayload['timeout']
-                try:
-                    timeoutInHours = float(value)
-                except ValueError:
-                    logger.error(f'Timeout-Value: {value} is not castable to int.')
-
-            if 'unit' in jsonPayload:
-                unitMinute = ('minute', 'min', 'm')
-                unitHour = ('hour', 'h')
-                unitDay = ('day', 'd')
-                unit = jsonPayload['unit']
-                if unit in unitMinute:
-                    timeoutInHours = timeoutInHours/60
-                elif unit in unitHour:
-                    timeoutInHours = timeoutInHours
-                elif unit in unitDay:
-                    timeoutInHours = timeoutInHours*24
-                else:
-                    logger.error(f'Duration/Timout unit: {unit} is not a valid value.')
-
+        if '{' in payload:
+            logger.debug("Payload looks like JSON")
+            state, timeout, unit = parse_json(payload)
 
         match function:
             case "mode":
-                await self.ventilation.comfoconnect.set_mode(stateToSet)
+                await self.ventilation.comfoconnect.set_mode(state)
             case "speed":
-                await self.ventilation.comfoconnect.set_speed(stateToSet)
+                await self.ventilation.comfoconnect.set_speed(state)
             case "bypass":
-                await self.ventilation.comfoconnect.set_bypass(stateToSet, int(timeoutInHours))
+                await self.ventilation.comfoconnect.set_bypass(state, to_seconds(timeout, unit))
             case "balancemode":
-                await self.ventilation.comfoconnect.set_balance_mode(stateToSet, int(timeoutInHours))
+                await self.ventilation.comfoconnect.set_balance_mode(state, to_seconds(timeout, unit))
             case "boost":
-                await self.ventilation.comfoconnect.set_boost(to_bool(stateToSet), int(timeoutInHours*3600))
+                await self.ventilation.comfoconnect.set_boost(state, to_seconds(timeout, unit))
             case "away":
-                await self.ventilation.comfoconnect.set_away(to_bool(stateToSet), int(timeoutInHours*3600))
+                await self.ventilation.comfoconnect.set_away(state, to_seconds(timeout, unit))
             case "comfocoolmode":
-                await self.ventilation.comfoconnect.set_comfocool_mode(stateToSet, int(timeoutInHours))
+                await self.ventilation.comfoconnect.set_comfocool_mode(state, to_seconds(timeout, unit))
             case "temperatureprofile":
-                await self.ventilation.comfoconnect.set_temperature_profile(stateToSet, int(timeoutInHours))
+                await self.ventilation.comfoconnect.set_temperature_profile(state, to_seconds(timeout, unit))
             case "temperaturepassive":
-                await self.ventilation.comfoconnect.set_sensor_ventmode_temperature_passive(stateToSet)
+                await self.ventilation.comfoconnect.set_sensor_ventmode_temperature_passive(state)
             case "humiditycomfort":
-                await self.ventilation.comfoconnect.set_sensor_ventmode_humidity_comfort(stateToSet)
+                await self.ventilation.comfoconnect.set_sensor_ventmode_humidity_comfort(state)
             case "humidityprotection":
-                await self.ventilation.comfoconnect.set_sensor_ventmode_humidity_protection(stateToSet)
+                await self.ventilation.comfoconnect.set_sensor_ventmode_humidity_protection(state)
             case _:
                 raise TopicNotSupportedError(function)
 
@@ -207,10 +145,45 @@ class Engine:
             await asyncio.sleep(KEEPALIVE_TIMEOUT.seconds)
             await self.ventilation.keepalive()
 
+def parse_json(payload):
+    payload_object = json.loads(payload)
+    timeout = None
+    unit = None
 
-class TopicNotSupportedError(Exception):
-    pass
+    if "state" in payload_object:
+        state = payload_object["state"]
+    else:
+        raise KeyError("JSON payload is missing mandatory key 'state'")
 
+    if "timeout" in payload_object:
+        timeout = int(payload_object["timeout"])
+
+    if "unit" in payload_object:
+        unit = str.lower(payload_object["unit"])
+        if unit in ("minutes", "minute", "min", "m"):
+            unit = Unit.MINUTE
+        elif unit in ("hours", "hour", "h"):
+            unit = Unit.HOUR
+        elif unit in ("days", "day", "d"):
+            unit = Unit.DAY
+        else:
+            raise ValueError("Unsupported unit: %s", unit)
+
+    return state, timeout, unit
+
+def to_seconds(timeout, unit):
+    if timeout is None:
+        return -1
+
+    match unit:
+        case Unit.MINUTE:
+            return timeout * 60
+        case Unit.HOUR:
+            return timeout * 60 * 60
+        case Unit.DAY:
+            return timeout * 60 * 60 * 24
+        case None:
+            return timeout * 60 * 60
 
 async def main():
     config = Config()
@@ -219,6 +192,13 @@ async def main():
         create_task(engine.subscribe_topics())
         await engine.run()
 
+class TopicNotSupportedError(Exception):
+    pass
+
+class Unit(Enum):
+    MINUTE = "minute"
+    DAY = "day"
+    HOUR = "hour"
 
 if __name__ == '__main__':
     asyncio.run(main())
