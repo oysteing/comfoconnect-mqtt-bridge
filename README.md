@@ -31,6 +31,7 @@ MQTT_CONTROL_TOPIC=comfoconnect/control
 MQTT_USER=
 MQTT_PASSWORD=
 MQTT_CLIENT_ID=
+MQTT_RETAIN=false
 LOG_LEVEL=info
 ```
 
@@ -64,6 +65,7 @@ services:
       MQTT_CLIENT_ID: comfoconnect
       MQTT_USER: comfoconnect
       MQTT_PASSWORD: mypassword
+      MQTT_RETAIN: true
       LOG_LEVEL: DEBUG
 ```
 

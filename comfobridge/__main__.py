@@ -27,6 +27,7 @@ class Config:
         self.mqtt_user = os.getenv("MQTT_USER", "")
         self.mqtt_password = os.getenv("MQTT_PASSWORD", "")
         self.mqtt_client_id = os.getenv("MQTT_CLIENT_ID", "")
+        self.mqtt_retain = os.getenv("MQTT_RETAIN", "False").lower() == "true"
         self.sensors = os.getenv("COMFOCONNECT_SENSORS")
         self.min_reporting_interval = int(os.getenv("COMFOBRIDGE_MIN_REPORTING_INTERVAL", 60))
         self.max_reporting_interval = int(os.getenv("COMFOBRIDGE_MAX_REPORTING_INTERVAL", 3600))
@@ -38,7 +39,7 @@ class Engine:
     def __init__(self, config: Config):
         self.config: Config = config
         self.mqtt = Mqtt(config.mqtt_sensor_topic, config.mqtt_host, config.mqtt_port, config.mqtt_client_id,
-                         config.mqtt_user, config.mqtt_password)
+                         config.mqtt_user, config.mqtt_password, config.mqtt_retain)
         reporting = Reporting(config.min_reporting_interval, config.max_reporting_interval, config.min_reporting_change)
         self.ventilation = Ventilation(config.comfoconnect_host, config.comfoconnect_uuid,
                                        config.comfoconnect_local_uuid, self.mqtt.sensor_publish, reporting)
